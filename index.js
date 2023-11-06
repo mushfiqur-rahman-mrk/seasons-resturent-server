@@ -113,6 +113,9 @@ async function run() {
       }
   })
 
+ 
+
+
 
     // GET:: get single food item from database
     app.get('/api/v1/all-foods/:id',async(req,res)=>{
@@ -120,6 +123,18 @@ async function run() {
       const query={_id: new ObjectId(id)}
       const result= await allFoodCollection.findOne(query)
       res.send(result)
+    })
+
+    // GET:: get all data of a user 
+    app.get('/api/v1/all-foods/user/:email', async(req,res)=>{
+      try{
+      const email=req.params.email;
+      const query={addby:email}
+      const result =await allFoodCollection.findOne(query)
+      res.send(result)
+      }catch (error) {
+        console.log(error);
+      }
     })
 
     // GET:: get all order data from database
@@ -135,6 +150,24 @@ async function run() {
        const result= await orderCollection.find(query).toArray()
        res.send(result)
     })
+
+    // PUT:: 
+    app.patch('/api/v1/all-foods/:id',async(req,res)=>{
+      const id=req.params.id;
+      const query={_id: new ObjectId(id)}
+      const updateFood=req.body;
+      const updatedoc={ 
+        $set:{
+          stock:updateFood.newstock,
+          count:updateFood.newcount
+        }
+      }
+      const result= await allFoodCollection.updateOne(query,updatedoc)
+      res.send(result)
+    })
+
+
+
 
     // DELETE:: delete one order item
     app.delete('/orders/:id', async(req,res)=>{
