@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app=express()
 require('dotenv').config()
 const port = process.env.PORT || 5000;
@@ -38,7 +38,9 @@ async function run() {
     // database collection 
     const testCollection=client.db('seasons').collection('testingDB')
     const allFoodCollection=client.db('seasons').collection('allFood')
+    const userCollection=client.db('seasons').collection('userDB')
 
+    // client side related api
     app.post('/api/v1/all-foods',async(req,res)=>{
         const newItem=req.body;
         const result= await allFoodCollection.insertOne(newItem)
@@ -46,9 +48,37 @@ async function run() {
 
     })
 
+    app.post('/user', async(req,res)=>{
+      const newUser=req.body;
+      const result =await userCollection.insertOne(newUser);
+      res.send(result)
+    })
+
+    app.get('/user', async(req,res)=>{
+      const cursor= await userCollection.find().toArray()
+      res.send(cursor)
+    })
+
+    app.get('/user/:email', async(req,res)=>{
+      const email=req.params.email;
+      const query={email:email}
+      const resutl= await userCollection.findOne(query)
+      res.send(resutl)
+    })
+
+    // 
     app.get('/api/v1/all-foods',async(req,res)=>{
       const cursor= await allFoodCollection.find().toArray()
       res.send(cursor)
+    })
+
+    // 
+
+    app.get('/api/v1/all-foods/:id',async(req,res)=>{
+      const id=req.params.id;
+      const query={_id: new ObjectId(id)}
+      const result= await allFoodCollection.findOne(query)
+      res.send(result)
     })
 
 
