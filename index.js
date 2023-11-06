@@ -39,6 +39,7 @@ async function run() {
     const testCollection=client.db('seasons').collection('testingDB')
     const allFoodCollection=client.db('seasons').collection('allFood')
     const userCollection=client.db('seasons').collection('userDB')
+    const orderCollection=client.db('seasons').collection('orderDB')
 
     // client side related api
 
@@ -57,27 +58,63 @@ async function run() {
       res.send(result)
     })
 
+    // POST:: post order data to database 
+    app.post('/orders',async(req,res)=>{
+      const newOrder=req.body;
+      // delete newOrder._id;
+      const result= await orderCollection.findOne({_id:newOrder._id})
+      if(result){
+        res.status(404).json()
+      }else{
+        const result= await orderCollection.insertOne(newOrder)
+        res.send(result)
+      }
+
+    })
+
+ 
     // Get:: get all user from database
-    app.get('/user', async(req,res)=>{
+    app.get('/users', async(req,res)=>{
       const cursor= await userCollection.find().toArray()
       res.send(cursor)
     })
     //GET:: get single user from database useing email
-    app.get('/user/:email', async(req,res)=>{
+    app.get('/users/:email', async(req,res)=>{
       const email=req.params.email;
       const query={email:email}
       const resutl= await userCollection.findOne(query)
       res.send(resutl)
     })
+    // GET:: get all food products from database also sort and search
 
-    // 
-    // app.get('/api/v1/all-foods',async(req,res)=>{
-    //   const cursor= await allFoodCollection.find().toArray()
-    //   res.send(cursor)
-    // })
+    // http://localhost:5000/api/v2/all-foods?name=India
+    // http://localhost:5000/api/v1/all-foods?sortField=count&sortOrder=asc /desc
+    // http://localhost:5000/api/v1/all-foods?sortField=count&sortOrder=desc
+    app.get('/api/v1/all-foods', async(req,res)=>{
+      try{
+        let queryItem={}
+        let sortItem={}
+      
+      const fname=req.query.fname;
+      const sortField=req.query.sortField
+      const sortOrder=req.query.sortOrder
+      if(fname){
+          queryItem.fname={ $regex: fname, $options: 'i' } 
+      }
+ 
+      if(sortField && sortOrder){
+          sortItem[sortField]=sortOrder
+      }
+      const cursor=await allFoodCollection.find(queryItem).sort(sortItem).toArray()
+      res.send(cursor)
 
-    // 
+      }catch(error){
+          console.log(error);
+      }
+  })
 
+
+    // GET:: get single food item from database
     app.get('/api/v1/all-foods/:id',async(req,res)=>{
       const id=req.params.id;
       const query={_id: new ObjectId(id)}
@@ -85,43 +122,22 @@ async function run() {
       res.send(result)
     })
 
-
-
-    // http://localhost:5000/api/v2/all-foods?name=India
-    // http://localhost:5000/api/v1/all-foods?sortField=count&sortOrder=asc /desc
-    // http://localhost:5000/api/v1/all-foods?sortField=count&sortOrder=desc
-    app.get('/api/v1/all-foods', async(req,res)=>{
-        try{
-          let queryItem={}
-          let sortItem={}
-        
-        const fname=req.query.fname;
-        const sortField=req.query.sortField
-        const sortOrder=req.query.sortOrder
-        if(fname){
-            queryItem.fname={ $regex: fname, $options: 'i' } 
-        }
-        // if(name){
-        //   queryItem.name=name;
-        // }
-        if(sortField && sortOrder){
-            sortItem[sortField]=sortOrder
-        }
-        const cursor=await allFoodCollection.find(queryItem).sort(sortItem).toArray()
-        res.send(cursor)
- 
-        }catch(error){
-            console.log(error);
-        }
+    // GET:: get all order data from database
+    app.get('/orders', async(req,res)=>{
+      const cursor= await orderCollection.find().toArray()
+      res.send(cursor)
+    })
+    
+    // Get:: get individual user order data
+    app.get('/orders/:email', async(req,res)=>{
+       const email=req.params.email;
+       const query={userEmail:email}
+       const result= await orderCollection.find(query).toArray()
+       res.send(result)
     })
 
-
-
-    // app.get('/api/v1/all-foods',async(req,res)=>{
-    //   const cursor= await allFoodCollection.find().toArray()
-    //   res.send(cursor)
-    // })
-
+    
+ 
 
 
 
