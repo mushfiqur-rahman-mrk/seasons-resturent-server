@@ -46,7 +46,10 @@ async function run() {
 
     })
 
-
+    app.get('/api/v1/all-foods',async(req,res)=>{
+      const cursor= await allFoodCollection.find().toArray()
+      res.send(cursor)
+    })
 
 
 
