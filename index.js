@@ -130,7 +130,7 @@ async function run() {
       try{
       const email=req.params.email;
       const query={addby:email}
-      const result =await allFoodCollection.findOne(query)
+      const result =await allFoodCollection.find(query).toArray()
       res.send(result)
       }catch (error) {
         console.log(error);
@@ -151,7 +151,7 @@ async function run() {
        res.send(result)
     })
 
-    // PUT:: 
+    // PATCH:: 
     app.patch('/api/v1/all-foods/:id',async(req,res)=>{
       const id=req.params.id;
       const query={_id: new ObjectId(id)}
@@ -166,7 +166,28 @@ async function run() {
       res.send(result)
     })
 
-
+    // PUT::
+    app.put('/api/v1/all-foods/:id', async(req,res)=>{
+      const id =req.params.id;
+      const query={_id: new ObjectId(id)}
+      const updatefood=req.body;
+      const options={upsert:true}
+      const updatedoc={
+        $set:{
+          fname:updatefood.fname,
+          fimage:updatefood.fimage,
+          category:updatefood.category,
+          price:updatefood.price,
+          origin:updatefood.origin,
+          stock:updatefood.stock,
+          addby:updatefood.addby,
+          description:updatefood.description,
+          count:updatefood.count
+        }
+      }
+      const result = await allFoodCollection.updateOne(query,updatedoc,options)
+      res.send(result)
+    })
 
 
     // DELETE:: delete one order item
@@ -177,7 +198,11 @@ async function run() {
       res.send(result)
     })
  
-
+    // DELETE:: delete my added item
+    // app.delete('/api/v1/all-foods/:id',async(req,res)=>{
+    //   const id=req.params.id;
+    //   const query={}
+    // })
 
 
 
