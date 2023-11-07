@@ -1,22 +1,39 @@
 const express = require('express');
 const cors = require('cors');
+const jwt = require('jsonwebtoken');
+var cookieParser = require('cookie-parser')
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app=express()
 require('dotenv').config()
 const port = process.env.PORT || 5000;
 
 // middleware
-app.use(cors())
+app.use(cors({
+  origin:['http://localhost:5173'],
+  credentials:true
+}))
 app.use(express.json())
-// app.use(cors({
-//     origin:['http://localhost:5173'],
-//     credentials: true
-//   }))
-// app.use(express.json())
+app.use(cookieParser())
+ 
 // seasons
 // UyehTCTwDbKZ27KU
 
-
+// :::: VERIFY TOKEN ::::
+const verifyToken=async (req,res,next)=>{
+  const token=req.cookies?.token;
+  //no token available
+  if(!token){
+    return res.status(401).send({message:'unauthorized access'})
+  }
+  // verify if the token is valid or not
+  jwt.verify(token,process.env.ACCESS_TOKEN,(err,decode)=>{
+    if(err){
+      return res.status(401).send({message:'unauthorized access'})
+    }
+    req.user=decode;
+    next()
+  })
+}
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.qaytt3g.mongodb.net/?retryWrites=true&w=majority`;
 
@@ -41,7 +58,27 @@ async function run() {
     const userCollection=client.db('seasons').collection('userDB')
     const orderCollection=client.db('seasons').collection('orderDB')
 
-    // client side related api
+    // :::::::: SERVER SIDE/ JWT APIS ::::::::::::::::
+
+    app.post('/jwt', async(req,res)=>{
+      const user=req.body;
+      const token = jwt.sign(user,process.env.ACCESS_TOKEN,{expiresIn:'1h'});
+      res
+      .cookie('token',token,{
+        httpOnly:true,
+        secure: true
+      })
+      .send({success:true})
+    })
+
+    app.post('/logout',async(req,res)=>{
+      const user=req.body;
+      res.clearCookie('token',{maxAge:0}).send({success:true})
+    })
+
+
+
+    // :::::::: CLIENT SIDE APIS ::::::::::::::::
 
     //POST:: add new food item to database
     app.post('/api/v1/all-foods',async(req,res)=>{
@@ -74,7 +111,7 @@ async function run() {
 
  
     // Get:: get all user from database
-    app.get('/users', async(req,res)=>{
+    app.get('/users',verifyToken, async(req,res)=>{
       const cursor= await userCollection.find().toArray()
       res.send(cursor)
     })
@@ -150,22 +187,7 @@ async function run() {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+ 
 
 
 
@@ -192,7 +214,7 @@ async function run() {
     })
 
     // GET:: get all order data from database
-    app.get('/orders', async(req,res)=>{
+    app.get('/orders',verifyToken, async(req,res)=>{
       const cursor= await orderCollection.find().toArray()
       res.send(cursor)
     })
