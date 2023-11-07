@@ -9,14 +9,17 @@ const port = process.env.PORT || 5000;
 
 // middleware
 app.use(cors({
-  origin:['http://localhost:5173'],
+  origin:['http://localhost:5173',
+  'https://seasons-c1591.web.app',
+  'https://seasons-c1591.firebaseapp.com'
+
+],
   credentials:true
 }))
 app.use(express.json())
 app.use(cookieParser())
  
-// seasons
-// UyehTCTwDbKZ27KU
+ 
 
 // :::: VERIFY TOKEN ::::
 const verifyToken=async (req,res,next)=>{
@@ -49,7 +52,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
 
 
     // database collection 
@@ -109,7 +112,11 @@ async function run() {
 
     })
 
- 
+    // if(req.query.email !== req.user.email){
+    //   return res.status(403).send({message: 'forbidden access'})
+    // }
+
+
     // Get:: get all user from database
     app.get('/users',verifyToken, async(req,res)=>{
       const cursor= await userCollection.find().toArray()
@@ -124,33 +131,6 @@ async function run() {
     })
     // GET:: get all food products from database also sort and search
 
-    // http://localhost:5000/api/v2/all-foods?name=India
-    // http://localhost:5000/api/v1/all-foods?sortField=count&sortOrder=asc /desc
-    // http://localhost:5000/api/v1/all-foods?sortField=count&sortOrder=desc
-  //   app.get('/api/v1/all-foods', async(req,res)=>{
-  //     try{
-  //       let queryItem={}
-  //       let sortItem={}
-      
-  //     const fname=req.query.fname;
-  //     const sortField=req.query.sortField
-  //     const sortOrder=req.query.sortOrder
-  //     if(fname){
-  //         queryItem.fname={ $regex: fname, $options: 'i' } 
-  //     }
- 
-  //     if(sortField && sortOrder){
-  //         sortItem[sortField]=sortOrder
-  //     }
-  //     const cursor=await allFoodCollection.find(queryItem).sort(sortItem).toArray()
-  //     res.send(cursor)
-
-  //     }catch(error){
-  //         console.log(error);
-  //     }
-  // })
-
- 
   app.get('/api/v1/all-foods', async(req,res)=>{
     try{
       let queryItem={}
@@ -175,24 +155,13 @@ async function run() {
         console.log(error);
     }
 })
-
-
-
+// ::::: ITEM COUNT FOR PAGINATION
   app.get('/itemCount', async(req,res)=>{
- 
     const count = await allFoodCollection.estimatedDocumentCount()
     res.send({count})
   })
 
-
-
-
  
-
-
-
-
-
     // GET:: get single food item from database
     app.get('/api/v1/all-foods/:id',async(req,res)=>{
       const id=req.params.id;
