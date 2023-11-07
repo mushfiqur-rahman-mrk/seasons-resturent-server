@@ -90,30 +90,84 @@ async function run() {
     // http://localhost:5000/api/v2/all-foods?name=India
     // http://localhost:5000/api/v1/all-foods?sortField=count&sortOrder=asc /desc
     // http://localhost:5000/api/v1/all-foods?sortField=count&sortOrder=desc
-    app.get('/api/v1/all-foods', async(req,res)=>{
-      try{
-        let queryItem={}
-        let sortItem={}
+  //   app.get('/api/v1/all-foods', async(req,res)=>{
+  //     try{
+  //       let queryItem={}
+  //       let sortItem={}
       
-      const fname=req.query.fname;
-      const sortField=req.query.sortField
-      const sortOrder=req.query.sortOrder
-      if(fname){
-          queryItem.fname={ $regex: fname, $options: 'i' } 
-      }
+  //     const fname=req.query.fname;
+  //     const sortField=req.query.sortField
+  //     const sortOrder=req.query.sortOrder
+  //     if(fname){
+  //         queryItem.fname={ $regex: fname, $options: 'i' } 
+  //     }
  
-      if(sortField && sortOrder){
-          sortItem[sortField]=sortOrder
-      }
-      const cursor=await allFoodCollection.find(queryItem).sort(sortItem).toArray()
-      res.send(cursor)
+  //     if(sortField && sortOrder){
+  //         sortItem[sortField]=sortOrder
+  //     }
+  //     const cursor=await allFoodCollection.find(queryItem).sort(sortItem).toArray()
+  //     res.send(cursor)
 
-      }catch(error){
-          console.log(error);
-      }
+  //     }catch(error){
+  //         console.log(error);
+  //     }
+  // })
+
+ 
+  app.get('/api/v1/all-foods', async(req,res)=>{
+    try{
+      let queryItem={}
+      let sortItem={}
+    const page=parseInt(req.query.page)
+    const size=parseInt(req.query.size)
+ 
+    const fname=req.query.fname;
+    const sortField=req.query.sortField
+    const sortOrder=req.query.sortOrder
+    if(fname){
+        queryItem.fname={ $regex: fname, $options: 'i' } 
+    }
+
+    if(sortField && sortOrder){
+        sortItem[sortField]=sortOrder
+    }
+    const cursor=await allFoodCollection.find(queryItem).sort(sortItem).skip(page*size).limit(size).toArray()
+    res.send(cursor)
+
+    }catch(error){
+        console.log(error);
+    }
+})
+
+
+
+  app.get('/itemCount', async(req,res)=>{
+ 
+    const count = await allFoodCollection.estimatedDocumentCount()
+    res.send({count})
   })
 
- 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -199,10 +253,12 @@ async function run() {
     })
  
     // DELETE:: delete my added item
-    // app.delete('/api/v1/all-foods/:id',async(req,res)=>{
-    //   const id=req.params.id;
-    //   const query={}
-    // })
+    app.delete('/api/v1/all-foods/:id',async(req,res)=>{
+      const id=req.params.id;
+      const query={_id: new ObjectId(id)}
+      const result= await allFoodCollection.deleteOne(query)
+      res.send(result)
+    })
 
 
 
