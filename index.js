@@ -119,6 +119,9 @@ async function run() {
 
     // Get:: get all user from database
     app.get('/users',verifyToken, async(req,res)=>{
+      if(req.query.email !== req.user.email){
+        return res.status(403).send({message: 'forbidden access'})
+      }
       const cursor= await userCollection.find().toArray()
       res.send(cursor)
     })
@@ -184,6 +187,9 @@ async function run() {
 
     // GET:: get all order data from database
     app.get('/orders',verifyToken, async(req,res)=>{
+      if(req.query.email !== req.user.email){
+        return res.status(403).send({message: 'forbidden access'})
+      }
       const cursor= await orderCollection.find().toArray()
       res.send(cursor)
     })
