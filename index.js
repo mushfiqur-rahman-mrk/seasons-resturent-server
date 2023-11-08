@@ -1,15 +1,16 @@
 const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
+require('dotenv').config()
 var cookieParser = require('cookie-parser')
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app=express()
-require('dotenv').config()
 const port = process.env.PORT || 5000;
 
 // middleware
 app.use(cors({
   origin:['http://localhost:5173',
+  'http://localhost:5174',
   'https://seasons-c1591.web.app',
   'https://seasons-c1591.firebaseapp.com'
 
@@ -69,7 +70,9 @@ async function run() {
       res
       .cookie('token',token,{
         httpOnly:true,
-        secure: true
+        secure: true ,
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+         
       })
       .send({success:true})
     })
